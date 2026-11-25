@@ -15,6 +15,7 @@ import {
   openLookModal,
   toggleWishlistItem,
   tryItemInStudio,
+  tryLookInStudio,
 } from '../state/store.js';
 import { escapeHtml, formatRupiah } from '../utils/format.js';
 
@@ -116,13 +117,22 @@ export function renderHomeView() {
         <div>
           <div class="section-head">
             <h2>Today's Pick</h2>
+            <button type="button" class="text-action" data-go="explore">All looks ›</button>
           </div>
           <article class="pick-card" data-open-look="${escapeHtml(String(dailyPick.id))}">
-            <div class="ornate-frame">
+            <div class="ornate-frame pick-media">
               <img src="${renderEditorialLookUri(dailyPick)}" alt="${escapeHtml(dailyPick.name)}" />
             </div>
-            <h3>${escapeHtml(dailyPick.name)}</h3>
-            <p class="pick-meta tabular-nums">${escapeHtml(dailyPick.type)} · ${formatRupiah(dailyPick.budget)}</p>
+            <div class="pick-body">
+              <p class="pick-kicker">${escapeHtml(dailyPick.type)}</p>
+              <h3>${escapeHtml(dailyPick.name)}</h3>
+              <p class="pick-meta tabular-nums">${formatRupiah(dailyPick.budget)}</p>
+              <p class="pick-pieces">${escapeHtml((dailyPick.pieces || []).slice(0, 3).join(' · '))}</p>
+              <div class="pick-actions">
+                <button type="button" class="btn-secondary pick-btn" data-open-look-btn="${escapeHtml(String(dailyPick.id))}">Detail</button>
+                <button type="button" class="btn-primary pick-btn" data-try-look="${escapeHtml(String(dailyPick.id))}">Coba Look</button>
+              </div>
+            </div>
           </article>
         </div>
       </div>
@@ -208,6 +218,20 @@ export function renderHomeView() {
 
   container.querySelectorAll('[data-open-look]').forEach((el) => {
     el.addEventListener('click', () => openLookModal(parseLookId(el.dataset.openLook)));
+  });
+
+  container.querySelectorAll('[data-open-look-btn]').forEach((el) => {
+    el.addEventListener('click', (event) => {
+      event.stopPropagation();
+      openLookModal(parseLookId(el.dataset.openLookBtn));
+    });
+  });
+
+  container.querySelectorAll('[data-try-look]').forEach((el) => {
+    el.addEventListener('click', (event) => {
+      event.stopPropagation();
+      tryLookInStudio(parseLookId(el.dataset.tryLook));
+    });
   });
 
   container.querySelectorAll('[data-mood]').forEach((el) => {
