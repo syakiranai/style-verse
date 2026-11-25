@@ -6,10 +6,14 @@
 
 html {
   scroll-behavior: smooth;
+  overflow-x: clip;
+  max-width: 100%;
 }
 
 body {
   margin: 0;
+  overflow-x: clip;
+  max-width: 100%;
   background-color: var(--color-bg);
   background-image: radial-gradient(circle at 12% 8%, #ffeaf2 0%, transparent 32%),
     radial-gradient(circle at 88% 18%, #fdf0ff 0%, transparent 28%);
@@ -17,6 +21,7 @@ body {
   font: 400 15px/1.6 var(--font-body);
   border-top: 5px solid var(--color-accent-badge);
   -webkit-font-smoothing: antialiased;
+  -webkit-tap-highlight-color: rgba(201, 75, 120, 0.14);
 }
 
 h1,

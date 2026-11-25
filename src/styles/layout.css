@@ -212,6 +212,10 @@
   opacity: 0.8;
 }
 
+.mobile-bottom-nav {
+  display: none;
+}
+
 /* Responsive Breakpoints */
 @media (max-width: 960px) {
   .grid-looks {
@@ -229,9 +233,9 @@
 
   .nav-bar {
     grid-template-columns: auto 1fr auto;
-    padding: 0 16px;
-    gap: 12px;
-    height: 58px;
+    padding: 0 14px;
+    gap: 8px;
+    height: 54px;
   }
 
   .nav-group {
@@ -247,7 +251,7 @@
     min-height: 44px;
     border: 0;
     background: transparent;
-    font-size: 16px;
+    font-size: 15px;
     font-weight: 600;
     color: var(--color-brand);
     padding: 0 6px;
@@ -256,12 +260,12 @@
 
   .brand-logo {
     justify-self: center;
-    width: 184px;
-    height: 46px;
+    width: 172px;
+    height: 44px;
   }
 
   .brand-logo span {
-    font-size: 26px;
+    font-size: 25px;
   }
 
   .mobile-drawer.is-open {
@@ -270,6 +274,8 @@
     padding: 8px 20px 16px;
     background: var(--color-bg);
     border-bottom: 2px dotted var(--color-gold);
+    max-height: 75vh;
+    overflow-y: auto;
   }
 
   .mobile-nav-link {
@@ -282,6 +288,64 @@
 
   .wrap {
     padding: 0 16px 40px;
+  }
+}
+
+@media (max-width: 768px) {
+  .mobile-bottom-nav {
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 40;
+    display: grid;
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    align-items: stretch;
+    min-height: 56px;
+    padding: 4px 6px calc(4px + env(safe-area-inset-bottom));
+    background: rgba(255, 245, 248, 0.94);
+    backdrop-filter: blur(12px);
+    border-top: 1.5px solid var(--color-gold);
+    box-shadow: 0 -4px 16px rgba(185, 92, 128, 0.12);
+  }
+
+  .mobile-tab-btn {
+    border: 0;
+    background: transparent;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 2px;
+    min-height: 46px;
+    padding: 4px 2px;
+    color: var(--color-ink-muted);
+    border-radius: 12px;
+    transition: color var(--duration-fast) ease, background-color var(--duration-fast) ease;
+  }
+
+  .mobile-tab-btn.is-active {
+    color: var(--color-accent);
+    background: rgba(255, 214, 230, 0.42);
+    font-weight: 700;
+  }
+
+  .mobile-tab-icon {
+    font-size: 16px;
+    line-height: 1;
+  }
+
+  .mobile-tab-label {
+    font-size: 10.5px;
+    line-height: 1.1;
+    white-space: nowrap;
+    max-width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .site-footer {
+    padding-bottom: calc(82px + env(safe-area-inset-bottom));
   }
 }
 
@@ -298,5 +362,17 @@
   .site-footer {
     flex-direction: column;
     align-items: flex-start;
+    padding-left: 16px;
+    padding-right: 16px;
+  }
+
+  .footer-links {
+    gap: 10px 16px;
+  }
+
+  .footer-link {
+    min-height: 36px;
+    display: inline-flex;
+    align-items: center;
   }
 }
