@@ -1,0 +1,39 @@
+:root {
+  /* Core Palette — Cute Pastel Pink Boutique */
+  --color-bg: #fff5f8;
+  --color-surface: #ffffff;
+  --color-surface-soft: #fff9fb;
+  --color-surface-tint: #ffeaf2;
+  --color-surface-lilac: #f9f0ff;
+  --color-brand: #6b2d47;
+  --color-brand-hover: #8a3a5c;
+  --color-accent: #c94b78;
+  --color-accent-soft: #ffd6e6;
+  --color-accent-badge: #e58eb0;
+  --color-ink: #4f2a38;
+  --color-ink-muted: #765060;
+  --color-border: #f4d3e0;
+  --color-gold: #ebb7ca;
+  --color-gold-deep: #d98ca9;
+
+  /* Pastel Pink Damask & Heart Lace Texture */
+  --pattern-damask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='90' height='120'%3E%3Crect width='90' height='120' fill='%23ffdce8'/%3E%3Cg fill='%23fff1f6'%3E%3Cpath d='M45 10C31 24 31 41 45 55C59 41 59 24 45 10ZM45 55C36 63 29 79 45 96C61 79 54 63 45 55Z'/%3E%3Cellipse cx='0' cy='60' rx='14' ry='26'/%3E%3Cellipse cx='90' cy='60' rx='14' ry='26'/%3E%3Ccircle cx='45' cy='112' r='5'/%3E%3C/g%3E%3C/svg%3E");
+
+  /* Typography */
+  --font-display: 'Cormorant Garamond', Georgia, serif;
+  --font-script: 'Great Vibes', cursive;
+  --font-body: 'DM Sans', system-ui, -apple-system, sans-serif;
+
+  /* Shadows & Cute Soft Radii */
+  --shadow-frame: 0 8px 22px rgba(185, 92, 128, 0.2), inset 0 0 0 1px #f3c4d6;
+  --shadow-ornate: inset 0 0 0 1px #ffffff, 0 5px 16px rgba(196, 108, 142, 0.14);
+  --shadow-panel: 0 8px 26px rgba(196, 108, 142, 0.1);
+  --radius-sm: 10px;
+  --radius-card: 16px;
+  --radius-pill: 999px;
+
+  /* Motion */
+  --ease-settle: cubic-bezier(0.16, 1, 0.3, 1);
+  --duration-fast: 180ms;
+  --duration-page: 300ms;
+}

@@ -1,0 +1,264 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Global safety net: deny everything by default
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // ===== Shared Hardened Helpers =====
+    function incoming() {
+      return request.resource.data;
+    }
+
+    function existing() {
+      return resource.data;
+    }
+
+    function isValidId(id) {
+      return id is string && id.size() >= 1 && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isVerifiedUser() {
+      return isSignedIn() && request.auth.token.email_verified == true;
+    }
+
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
+    function isBootstrapAdmin() {
+      return isVerifiedUser() && request.auth.token.email == 'syakiranaila021@gmail.com';
+    }
+
+    function getUserRole() {
+      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role;
+    }
+
+    function hasUserDoc() {
+      return exists(/databases/$(database)/documents/users/$(request.auth.uid));
+    }
+
+    function isAdmin() {
+      return isBootstrapAdmin() || (isVerifiedUser() && hasUserDoc() && getUserRole() == 'admin');
+    }
+
+    function isOperatorOrAdmin() {
+      return isBootstrapAdmin() || (isVerifiedUser() && hasUserDoc() && (getUserRole() == 'operator' || getUserRole() == 'admin'));
+    }
+
+    // ===== Entity Validation Blueprints =====
+    function isValidUserAccount(data, userId) {
+      return data.keys().hasAll(['uid', 'email', 'displayName', 'role', 'favLookIds', 'wishItemIds', 'createdAt', 'updatedAt'])
+        && data.keys().hasOnly(['uid', 'email', 'displayName', 'role', 'favLookIds', 'wishItemIds', 'createdAt', 'updatedAt'])
+        && data.uid is string && data.uid == userId && isValidId(data.uid)
+        && data.email is string && data.email.size() >= 3 && data.email.size() <= 160
+        && data.displayName is string && data.displayName.size() >= 1 && data.displayName.size() <= 80
+        && data.role in ['user', 'operator', 'admin']
+        && data.favLookIds is list && data.favLookIds.size() <= 50
+        && (data.favLookIds.size() == 0 || data.favLookIds[0] is int || (data.favLookIds[0] is string && data.favLookIds[0].size() <= 128))
+        && data.wishItemIds is list && data.wishItemIds.size() <= 100
+        && (data.wishItemIds.size() == 0 || data.wishItemIds[0] is int)
+        && data.createdAt is timestamp
+        && data.updatedAt is timestamp;
+    }
+
+    function isValidUserOutfit(data, userId) {
+      return data.keys().hasAll(['ownerId', 'name', 'dateLabel', 'worn', 'totalPrice', 'createdAt', 'updatedAt'])
+        && data.keys().hasOnly(['ownerId', 'name', 'dateLabel', 'worn', 'totalPrice', 'createdAt', 'updatedAt'])
+        && data.ownerId is string && data.ownerId == userId && isValidId(data.ownerId)
+        && data.name is string && data.name.size() >= 1 && data.name.size() <= 80
+        && data.dateLabel is string && data.dateLabel.size() >= 1 && data.dateLabel.size() <= 40
+        && data.worn is map
+        && data.worn.keys().hasOnly(['top', 'bottom', 'dress', 'outer', 'shoes'])
+        && data.totalPrice is number && data.totalPrice >= 0 && data.totalPrice <= 50000000
+        && data.createdAt is timestamp
+        && data.updatedAt is timestamp;
+    }
+
+    function isValidCuratedLook(data) {
+      return data.keys().hasAll(['authorId', 'name', 'type', 'budget', 'scene', 'desc', 'pieces', 'outfitSpec', 'status', 'createdAt', 'updatedAt'])
+        && data.keys().hasOnly(['authorId', 'name', 'type', 'budget', 'scene', 'desc', 'pieces', 'outfitSpec', 'status', 'createdAt', 'updatedAt'])
+        && data.authorId is string && isValidId(data.authorId)
+        && data.name is string && data.name.size() >= 2 && data.name.size() <= 80
+        && data.type in ['Campus look', 'Coffee date', 'Vacation', 'Daily casual', 'Formal event', 'Modest style']
+        && data.budget is number && data.budget >= 0 && data.budget <= 50000000
+        && data.scene in ['terrace', 'city', 'campus', 'cafe', 'coastal', 'minimal', 'modest', 'formal', 'garden']
+        && data.desc is string && data.desc.size() >= 4 && data.desc.size() <= 240
+        && data.pieces is list && data.pieces.size() >= 1 && data.pieces.size() <= 10
+        && data.pieces[0] is string && data.pieces[0].size() >= 1 && data.pieces[0].size() <= 80
+        && data.outfitSpec is map
+        && data.outfitSpec.keys().hasOnly(['top', 'bottom', 'dress', 'outer', 'shoes'])
+        && data.status in ['published', 'draft']
+        && data.createdAt is timestamp
+        && data.updatedAt is timestamp;
+    }
+
+    function isValidOrder(data) {
+      return data.keys().hasAll([
+          'orderNumber', 'buyerId', 'buyerName', 'buyerEmail', 'phone',
+          'shippingAddress', 'shippingCity', 'courier', 'paymentMethod', 'paymentCode',
+          'items', 'subtotal', 'shippingFee', 'serviceFee', 'totalAmount',
+          'notes', 'status', 'createdAt', 'updatedAt'
+        ])
+        && data.keys().hasOnly([
+          'orderNumber', 'buyerId', 'buyerName', 'buyerEmail', 'phone',
+          'shippingAddress', 'shippingCity', 'courier', 'paymentMethod', 'paymentCode',
+          'items', 'subtotal', 'shippingFee', 'serviceFee', 'totalAmount',
+          'notes', 'status', 'createdAt', 'updatedAt'
+        ])
+        && data.orderNumber is string && data.orderNumber.size() >= 4 && data.orderNumber.size() <= 32
+        && data.buyerId is string && isValidId(data.buyerId)
+        && data.buyerName is string && data.buyerName.size() >= 1 && data.buyerName.size() <= 80
+        && data.buyerEmail is string && data.buyerEmail.size() >= 3 && data.buyerEmail.size() <= 160
+        && data.phone is string && data.phone.size() >= 6 && data.phone.size() <= 30
+        && data.shippingAddress is string && data.shippingAddress.size() >= 5 && data.shippingAddress.size() <= 300
+        && data.shippingCity is string && data.shippingCity.size() >= 2 && data.shippingCity.size() <= 80
+        && data.courier in ['reguler', 'nextday', 'instant']
+        && data.paymentMethod in ['qris', 'va_bca', 'va_mandiri', 'ewallet', 'card', 'cod']
+        && data.paymentCode is string && data.paymentCode.size() >= 2 && data.paymentCode.size() <= 60
+        && data.items is list && data.items.size() >= 1 && data.items.size() <= 30
+        && data.items[0] is map
+        && data.subtotal is number && data.subtotal >= 1000 && data.subtotal <= 100000000
+        && data.shippingFee is number && data.shippingFee >= 0 && data.shippingFee <= 500000
+        && data.serviceFee is number && data.serviceFee >= 0 && data.serviceFee <= 100000
+        && data.totalAmount is number && data.totalAmount == (data.subtotal + data.shippingFee + data.serviceFee)
+        && data.notes is string && data.notes.size() <= 200
+        && data.status in ['pending_payment', 'paid', 'processing', 'shipped', 'completed', 'cancelled']
+        && data.createdAt is timestamp
+        && data.updatedAt is timestamp;
+    }
+
+    // ===== Collection: /users/{userId} =====
+    match /users/{userId} {
+      allow get: if isValidId(userId) && (isOwner(userId) || isAdmin());
+      allow list: if isBootstrapAdmin();
+
+      allow create: if isValidId(userId)
+        && isOwner(userId)
+        && isValidUserAccount(incoming(), userId)
+        && incoming().email == request.auth.token.email
+        && incoming().createdAt == request.time
+        && incoming().updatedAt == request.time
+        && (incoming().role == 'user' || (isBootstrapAdmin() && incoming().role == 'admin'));
+
+      allow update: if isValidId(userId)
+        && isSignedIn()
+        && isValidUserAccount(incoming(), userId)
+        && incoming().uid == existing().uid
+        && incoming().email == existing().email
+        && incoming().createdAt == existing().createdAt
+        && incoming().updatedAt == request.time
+        && (
+          (isOwner(userId)
+            && incoming().role == existing().role
+            && incoming().diff(existing()).affectedKeys().hasOnly(['displayName', 'favLookIds', 'wishItemIds', 'updatedAt']))
+          || (isAdmin()
+            && incoming().diff(existing()).affectedKeys().hasOnly(['role', 'updatedAt']))
+        );
+
+      allow delete: if false;
+
+      // ===== Subcollection: /users/{userId}/outfits/{outfitId} =====
+      match /outfits/{outfitId} {
+        allow get: if isValidId(userId) && isValidId(outfitId) && (isOwner(userId) || isAdmin());
+        allow list: if isSignedIn() && (existing().ownerId == request.auth.uid || isBootstrapAdmin());
+
+        allow create: if isValidId(userId)
+          && isValidId(outfitId)
+          && isOwner(userId)
+          && exists(/databases/$(database)/documents/users/$(userId))
+          && isValidUserOutfit(incoming(), userId)
+          && incoming().createdAt == request.time
+          && incoming().updatedAt == request.time;
+
+        allow update: if isValidId(userId)
+          && isValidId(outfitId)
+          && isOwner(userId)
+          && isValidUserOutfit(incoming(), userId)
+          && incoming().ownerId == existing().ownerId
+          && incoming().createdAt == existing().createdAt
+          && incoming().updatedAt == request.time
+          && incoming().diff(existing()).affectedKeys().hasOnly(['name', 'dateLabel', 'worn', 'totalPrice', 'updatedAt']);
+
+        allow delete: if isValidId(userId) && isValidId(outfitId) && (isOwner(userId) || isAdmin());
+      }
+    }
+
+    // ===== Collection: /curatedLooks/{lookId} =====
+    match /curatedLooks/{lookId} {
+      allow get: if isValidId(lookId) && (existing().status == 'published' || (isVerifiedUser() && (existing().authorId == request.auth.uid || isOperatorOrAdmin())));
+      allow list: if existing().status == 'published' || (isVerifiedUser() && (existing().authorId == request.auth.uid || isBootstrapAdmin()));
+
+      allow create: if isValidId(lookId)
+        && isVerifiedUser()
+        && isValidCuratedLook(incoming())
+        && incoming().authorId == request.auth.uid
+        && incoming().createdAt == request.time
+        && incoming().updatedAt == request.time
+        && isOperatorOrAdmin();
+
+      allow update: if isValidId(lookId)
+        && isVerifiedUser()
+        && isValidCuratedLook(incoming())
+        && incoming().authorId == existing().authorId
+        && incoming().createdAt == existing().createdAt
+        && incoming().updatedAt == request.time
+        && isOperatorOrAdmin()
+        && incoming().diff(existing()).affectedKeys().hasOnly(['name', 'type', 'budget', 'scene', 'desc', 'pieces', 'outfitSpec', 'status', 'updatedAt']);
+
+      allow delete: if isValidId(lookId) && isVerifiedUser() && isOperatorOrAdmin();
+    }
+
+    // ===== Collection: /orders/{orderId} =====
+    match /orders/{orderId} {
+      allow get: if isValidId(orderId) && isSignedIn() && (existing().buyerId == request.auth.uid || isOperatorOrAdmin());
+      allow list: if isSignedIn() && (existing().buyerId == request.auth.uid || isBootstrapAdmin());
+
+      allow create: if isValidId(orderId)
+        && isSignedIn()
+        && isValidOrder(incoming())
+        && incoming().buyerId == request.auth.uid
+        && incoming().status in ['pending_payment', 'paid', 'processing']
+        && incoming().createdAt == request.time
+        && incoming().updatedAt == request.time
+        && exists(/databases/$(database)/documents/users/$(request.auth.uid));
+
+      allow update: if isValidId(orderId)
+        && isSignedIn()
+        && isValidOrder(incoming())
+        && incoming().orderNumber == existing().orderNumber
+        && incoming().buyerId == existing().buyerId
+        && incoming().buyerEmail == existing().buyerEmail
+        && incoming().items == existing().items
+        && incoming().subtotal == existing().subtotal
+        && incoming().shippingFee == existing().shippingFee
+        && incoming().serviceFee == existing().serviceFee
+        && incoming().totalAmount == existing().totalAmount
+        && incoming().createdAt == existing().createdAt
+        && incoming().updatedAt == request.time
+        && (
+          (isAdmin() && incoming().diff(existing()).affectedKeys().hasOnly(['status', 'updatedAt']))
+          || (
+            existing().status != 'completed'
+            && existing().status != 'cancelled'
+            && (
+              (existing().buyerId == request.auth.uid
+                && existing().status == 'pending_payment'
+                && incoming().status in ['paid', 'cancelled']
+                && incoming().diff(existing()).affectedKeys().hasOnly(['status', 'updatedAt']))
+              || (isOperatorOrAdmin()
+                && incoming().diff(existing()).affectedKeys().hasOnly(['status', 'updatedAt']))
+            )
+          )
+        );
+
+      allow delete: if false;
+    }
+  }
+}

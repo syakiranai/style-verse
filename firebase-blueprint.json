@@ -1,0 +1,311 @@
+{
+  "entities": {
+    "UserAccount": {
+      "title": "UserAccount",
+      "description": "Authenticated Styleverse user profile, RBAC role, and synced wishlist/favorites IDs.",
+      "type": "object",
+      "properties": {
+        "uid": {
+          "type": "string",
+          "description": "Firebase Auth UID matching the document ID.",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "email": {
+          "type": "string",
+          "format": "email",
+          "description": "User email address.",
+          "minLength": 3,
+          "maxLength": 160
+        },
+        "displayName": {
+          "type": "string",
+          "description": "Display name shown in header and profile.",
+          "minLength": 1,
+          "maxLength": 80
+        },
+        "role": {
+          "type": "string",
+          "enum": ["user", "operator", "admin"],
+          "description": "Application access role: user (user biasa), operator, or admin."
+        },
+        "favLookIds": {
+          "type": "array",
+          "description": "Saved look IDs for this user (max 50)."
+        },
+        "wishItemIds": {
+          "type": "array",
+          "description": "Saved garment item IDs in wishlist (max 100)."
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server creation timestamp."
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server last-update timestamp."
+        }
+      },
+      "required": ["uid", "email", "displayName", "role", "favLookIds", "wishItemIds", "createdAt", "updatedAt"]
+    },
+    "UserOutfit": {
+      "title": "UserOutfit",
+      "description": "Custom dressed-mannequin outfit saved by an authenticated user in Studio.",
+      "type": "object",
+      "properties": {
+        "ownerId": {
+          "type": "string",
+          "description": "Owner Firebase Auth UID.",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "name": {
+          "type": "string",
+          "description": "Outfit title.",
+          "minLength": 1,
+          "maxLength": 80
+        },
+        "dateLabel": {
+          "type": "string",
+          "description": "Formatted display date label.",
+          "minLength": 1,
+          "maxLength": 40
+        },
+        "worn": {
+          "type": "object",
+          "description": "Map of garment slots (top, bottom, dress, outer, shoes) to [itemId, colorIndex]."
+        },
+        "totalPrice": {
+          "type": "number",
+          "description": "Total outfit price in IDR."
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server creation timestamp."
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server last-update timestamp."
+        }
+      },
+      "required": ["ownerId", "name", "dateLabel", "worn", "totalPrice", "createdAt", "updatedAt"]
+    },
+    "CuratedLook": {
+      "title": "CuratedLook",
+      "description": "Editorial look curated by an operator or admin for the Explore Lookbook.",
+      "type": "object",
+      "properties": {
+        "authorId": {
+          "type": "string",
+          "description": "Author Firebase Auth UID.",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "name": {
+          "type": "string",
+          "description": "Look title.",
+          "minLength": 2,
+          "maxLength": 80
+        },
+        "type": {
+          "type": "string",
+          "enum": ["Campus look", "Coffee date", "Vacation", "Daily casual", "Formal event", "Modest style"],
+          "description": "Occasion category."
+        },
+        "budget": {
+          "type": "number",
+          "description": "Estimated look budget in IDR."
+        },
+        "scene": {
+          "type": "string",
+          "enum": ["terrace", "city", "campus", "cafe", "coastal", "minimal", "modest", "formal", "garden"],
+          "description": "Editorial illustration backdrop scene."
+        },
+        "desc": {
+          "type": "string",
+          "description": "Editorial description of the look.",
+          "minLength": 4,
+          "maxLength": 240
+        },
+        "pieces": {
+          "type": "array",
+          "description": "Checklist of outfit pieces (1 to 10 strings)."
+        },
+        "outfitSpec": {
+          "type": "object",
+          "description": "Optional garment slot mapping for Try in Studio."
+        },
+        "status": {
+          "type": "string",
+          "enum": ["published", "draft"],
+          "description": "Publication visibility state."
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server creation timestamp."
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server last-update timestamp."
+        }
+      },
+      "required": ["authorId", "name", "type", "budget", "scene", "desc", "pieces", "outfitSpec", "status", "createdAt", "updatedAt"]
+    },
+    "Order": {
+      "title": "Order",
+      "description": "E-commerce purchase transaction placed by an authenticated user.",
+      "type": "object",
+      "properties": {
+        "orderNumber": {
+          "type": "string",
+          "description": "Human-readable order code.",
+          "minLength": 4,
+          "maxLength": 32
+        },
+        "buyerId": {
+          "type": "string",
+          "description": "Buyer Firebase Auth UID.",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "buyerName": {
+          "type": "string",
+          "description": "Recipient full name.",
+          "minLength": 1,
+          "maxLength": 80
+        },
+        "buyerEmail": {
+          "type": "string",
+          "format": "email",
+          "description": "Buyer email address.",
+          "minLength": 3,
+          "maxLength": 160
+        },
+        "phone": {
+          "type": "string",
+          "description": "Recipient phone or WhatsApp number.",
+          "minLength": 6,
+          "maxLength": 30
+        },
+        "shippingAddress": {
+          "type": "string",
+          "description": "Full street shipping address.",
+          "minLength": 5,
+          "maxLength": 300
+        },
+        "shippingCity": {
+          "type": "string",
+          "description": "City / postal area.",
+          "minLength": 2,
+          "maxLength": 80
+        },
+        "courier": {
+          "type": "string",
+          "enum": ["reguler", "nextday", "instant"],
+          "description": "Selected shipping courier service."
+        },
+        "paymentMethod": {
+          "type": "string",
+          "enum": ["qris", "va_bca", "va_mandiri", "ewallet", "card", "cod"],
+          "description": "Selected e-commerce payment method."
+        },
+        "paymentCode": {
+          "type": "string",
+          "description": "Generated payment reference or masked card/VA number.",
+          "minLength": 2,
+          "maxLength": 60
+        },
+        "items": {
+          "type": "array",
+          "description": "Purchased garment line items (1 to 30 entries)."
+        },
+        "subtotal": {
+          "type": "number",
+          "description": "Sum of garment line items in IDR."
+        },
+        "shippingFee": {
+          "type": "number",
+          "description": "Shipping fee in IDR."
+        },
+        "serviceFee": {
+          "type": "number",
+          "description": "Platform service fee in IDR."
+        },
+        "totalAmount": {
+          "type": "number",
+          "description": "Final total payable in IDR."
+        },
+        "notes": {
+          "type": "string",
+          "description": "Optional buyer order note.",
+          "minLength": 0,
+          "maxLength": 200
+        },
+        "status": {
+          "type": "string",
+          "enum": ["pending_payment", "paid", "processing", "shipped", "completed", "cancelled"],
+          "description": "Order payment and fulfillment lifecycle status."
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server creation timestamp."
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server last-update timestamp."
+        }
+      },
+      "required": [
+        "orderNumber",
+        "buyerId",
+        "buyerName",
+        "buyerEmail",
+        "phone",
+        "shippingAddress",
+        "shippingCity",
+        "courier",
+        "paymentMethod",
+        "paymentCode",
+        "items",
+        "subtotal",
+        "shippingFee",
+        "serviceFee",
+        "totalAmount",
+        "notes",
+        "status",
+        "createdAt",
+        "updatedAt"
+      ]
+    }
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": { "$ref": "#/entities/UserAccount" },
+      "description": "User accounts, verified roles (user, operator, admin), and saved look/wishlist IDs."
+    },
+    "/users/{userId}/outfits/{outfitId}": {
+      "schema": { "$ref": "#/entities/UserOutfit" },
+      "description": "Private custom studio outfits owned by each user."
+    },
+    "/curatedLooks/{lookId}": {
+      "schema": { "$ref": "#/entities/CuratedLook" },
+      "description": "Curated editorial looks created and managed by operators and admins."
+    },
+    "/orders/{orderId}": {
+      "schema": { "$ref": "#/entities/Order" },
+      "description": "E-commerce customer garment orders with payment method and fulfillment status."
+    }
+  }
+}
